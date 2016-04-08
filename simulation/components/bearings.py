@@ -45,6 +45,13 @@ class Bearing(object):
         self.not_ready_event()
 
 
+class MechanicalBearing(Bearing):
+    def __init__(self):
+        super(MechanicalBearing, self).__init__()
+
+        self._ready = True
+
+
 class MagneticBearing(Bearing):
     def __init__(self):
         super(MagneticBearing, self).__init__()

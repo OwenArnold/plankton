@@ -1,1 +1,1 @@
-from bearings import Bearing
+from bearings import Bearing, MechanicalBearing

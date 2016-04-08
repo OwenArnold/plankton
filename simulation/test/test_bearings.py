@@ -1,4 +1,4 @@
-from ..components import Bearing
+from ..components import Bearing, MechanicalBearing
 
 import unittest
 from mock import Mock, patch
@@ -80,3 +80,10 @@ class TestBearingBaseFunctionality(unittest.TestCase):
         bearing.stop()
 
         bearing.doStop.assert_called_once()
+
+
+class TestMechanicalBearing(unittest.TestCase):
+    def test_MechanicalBearing_is_ready_by_default(self):
+        bearing = MechanicalBearing()
+
+        self.assertTrue(bearing.ready)
