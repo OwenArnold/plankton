@@ -1,5 +1,4 @@
 from fysom import Fysom as StateMachine
-from obsub import event
 
 from threading import Timer
 from time import sleep
