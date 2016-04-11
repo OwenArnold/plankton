@@ -4,14 +4,10 @@ from obsub import event
 from threading import Timer
 from time import sleep
 
-from mixins import CanBeReady, CanSwitchOn, CanSwitchOff, CanLevitate
+from mixins import CanBeReady, CanFail, CanSwitchOn, CanSwitchOff, CanLevitate
 
 
-class Bearing(CanBeReady, object):
-    @event
-    def error_event(self, message):
-        pass
-
+class Bearing(CanBeReady, CanFail, object):
     def start(self):
         if not self.ready:
             if hasattr(self, 'doStart'):

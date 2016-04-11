@@ -29,6 +29,12 @@ class CanBeReady(object):
             self.not_ready_event()
 
 
+class CanFail(object):
+    @event
+    def error_event(self, message):
+        pass
+
+
 class CanSwitchOn(object):
     __metaclass__ = ABCMeta
 

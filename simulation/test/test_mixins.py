@@ -1,4 +1,4 @@
-from ..components import CanBeReady, CanSwitchOn, CanSwitchOff
+from ..components import CanBeReady, CanFail, CanSwitchOn, CanSwitchOff
 
 import unittest
 from mock import patch, Mock
@@ -69,6 +69,18 @@ class TestCanBeReady(unittest.TestCase):
         mixin._setNotReady()
 
         notReadyEventMock.assert_not_called()
+
+
+class TestCanFail(unittest.TestCase):
+    def test_error_message_is_emitted(self):
+        mixin = CanFail()
+
+        errorEventMock = Mock()
+        mixin.error_event += errorEventMock
+
+        mixin.error_event('An error occured')
+
+        errorEventMock.assert_called_once_with(mixin, 'An error occured')
 
 
 @patch.multiple(CanSwitchOn, __abstractmethods__=set())
