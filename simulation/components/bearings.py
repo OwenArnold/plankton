@@ -1,6 +1,9 @@
 from fysom import Fysom as StateMachine
 from obsub import event
 
+from threading import Timer
+from time import sleep
+
 from mixins import CanSwitchOn, CanSwitchOff, CanLevitate
 
 
@@ -133,6 +136,23 @@ class MagneticBearing(CanSwitchOn, CanSwitchOff, CanLevitate, Bearing):
         self._fsm.fail(error_message=message)
 
 
-if __name__ == '__main__':
-    mb = MagneticBearing()
-    mb.start()
+class TimedMagneticBearing(MagneticBearing):
+    def __init__(self, levitation_time):
+        super(TimedMagneticBearing, self).__init__()
+
+        self._timer = Timer(interval=levitation_time,
+                            function=self.simulateLevitationSuccess)
+
+    def doSimulateLevitation(self):
+        self._timer.start()
+
+
+class BlockingTimedMagneticBearing(MagneticBearing):
+    def __init__(self, levitation_time):
+        super(BlockingTimedMagneticBearing, self).__init__()
+
+        self._levitation_time = levitation_time
+
+    def doSimulateLevitation(self):
+        sleep(self._levitation_time)
+        self.simulateLevitationSuccess()
