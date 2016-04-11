@@ -1,2 +1,2 @@
-from bearings import Bearing, MechanicalBearing, MagneticBearing
+from bearings import Bearing, MechanicalBearing, MagneticBearing, TimedMagneticBearing, BlockingTimedMagneticBearing
 from mixins import CanSwitchOn, CanSwitchOff, CanLevitate
