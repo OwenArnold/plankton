@@ -35,6 +35,40 @@ class CanFail(object):
         pass
 
 
+class CanStartStop(object):
+    __metaclass__ = ABCMeta
+
+    @abstractmethod
+    def canStart(self):
+        return False
+
+    @abstractmethod
+    def doStartComplete(self):
+        pass
+
+    def start(self):
+        if self.canStart():
+            if hasattr(self, 'doStart'):
+                self.doStart()
+            else:
+                self.doStartComplete()
+
+    @abstractmethod
+    def canStop(self):
+        return False
+
+    @abstractmethod
+    def doStopComplete(self):
+        pass
+
+    def stop(self):
+        if self.canStop():
+            if hasattr(self, 'doStop'):
+                self.doStop()
+            else:
+                self.doStopComplete()
+
+
 class CanSwitchOn(object):
     __metaclass__ = ABCMeta
 

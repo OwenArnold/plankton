@@ -3,23 +3,15 @@ from fysom import Fysom as StateMachine
 from threading import Timer
 from time import sleep
 
-from mixins import CanBeReady, CanFail, CanSwitchOn, CanSwitchOff, CanLevitate
+from mixins import CanBeReady, CanFail, CanStartStop, CanSwitchOn, CanSwitchOff, CanLevitate
 
 
-class Bearing(CanBeReady, CanFail, object):
-    def start(self):
-        if not self.ready:
-            if hasattr(self, 'doStart'):
-                self.doStart()
-            else:
-                self.doStartComplete()
+class Bearing(CanBeReady, CanStartStop, CanFail, object):
+    def canStart(self):
+        return not self.ready
 
-    def stop(self):
-        if self.ready:
-            if hasattr(self, 'doStop'):
-                self.doStop()
-            else:
-                self.doStopComplete()
+    def canStop(self):
+        return self.ready
 
     def doStartComplete(self):
         self._setReady()
@@ -32,7 +24,10 @@ class MechanicalBearing(Bearing):
     def __init__(self):
         super(MechanicalBearing, self).__init__()
 
-        self._ready = True
+        self._setReady()
+
+    def doStop(self):
+        pass
 
 
 class MagneticBearing(CanSwitchOn, CanSwitchOff, CanLevitate, Bearing):
