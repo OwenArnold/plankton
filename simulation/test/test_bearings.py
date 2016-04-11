@@ -2,6 +2,7 @@ from ..components import Bearing, MechanicalBearing, MagneticBearing
 
 import unittest
 from mock import Mock, patch
+from functools import partial
 
 
 def MakeBearing(ready='not ready'):
@@ -159,11 +160,10 @@ class TestMagneticBearing(unittest.TestCase):
         self.assertTrue(bearing.ready)
 
     def test_simulateLevitationFailure(self):
-        print '0-----------------------'
         bearing = MagneticBearing()
 
         errorMock = Mock()
-        bearing.doSimulationLevitation = bearing.simulateLevitationFailure
+        bearing.doSimulateLevitation = partial(bearing.simulateLevitationFailure, 'Could not reach levitation.')
         bearing.error_event += errorMock
 
         bearing.start()

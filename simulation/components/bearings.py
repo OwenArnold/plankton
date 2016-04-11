@@ -64,16 +64,17 @@ class MagneticBearing(CanSwitchOn, CanSwitchOff, CanLevitate, Bearing):
                 ('switch_on', 'off', 'resting'),
                 ('switch_off', 'resting', 'off'),
 
-                ('levitate', 'resting', 'levitated'),
+                ('levitate', 'resting', 'levitating'),
+                ('levitation_stable', 'levitating', 'levitated'),
                 ('delevitate', 'levitated', 'resting'),
 
                 ('fail', '*', 'error')
             ],
 
             'callbacks': {
-                'onleaveresting': self._simulateLevitation,
+                'onlevitating': self._simulateLevitation,
                 'onlevitated': self.doLevitateComplete,
-                'onresting': self.doDelevitateComplete,
+                'onleavelevitated': self.doDelevitateComplete,
                 'onerror': self._handle_error,
             }
 
@@ -117,26 +118,19 @@ class MagneticBearing(CanSwitchOn, CanSwitchOff, CanLevitate, Bearing):
         self._fsm.delevitate()
 
     def doDelevitateComplete(self, ev):
-        if ev.src != 'off':
-            self.doStopComplete()
+        self.doStopComplete()
 
     def _simulateLevitation(self, ev):
-        if ev.event == 'levitate':
-            if hasattr(self, 'doSimulateLevitation'):
-                self.doSimulateLevitation()
+        if hasattr(self, 'doSimulateLevitation'):
+            self.doSimulateLevitation()
+        else:
+            self.simulateLevitationSuccess()
 
     def simulateLevitationSuccess(self):
-        if self._isInTransition():
-            self._fsm.transition()
+        self._fsm.levitation_stable()
 
-    def simulateLevitationFailure(self):
-        if self._isInTransition():
-            delattr(self._fsm, 'transition')
-            self._fsm.fail('Failed to reach levitated state.')
-
-    def _isInTransition(self):
-        print 'yes'
-        return hasattr(self._fsm, 'transition')
+    def simulateLevitationFailure(self, message):
+        self._fsm.fail(error_message=message)
 
 
 if __name__ == '__main__':
