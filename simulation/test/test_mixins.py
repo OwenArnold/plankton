@@ -1,4 +1,4 @@
-from ..components import CanBeReady, CanFail, CanSwitchOn, CanSwitchOff
+from ..components import CanBeReady, CanFail, CanSwitchOn, CanSwitchOff, HasSpeed
 
 import unittest
 from mock import patch, Mock
@@ -175,3 +175,32 @@ class TestCanSwitchOff(unittest.TestCase):
             mixin.switchOff()
 
         doSwitchOffCompleteMock.assert_not_called()
+
+
+@patch.multiple(HasSpeed, __abstractmethods__=set())
+class TestHasSpeed(unittest.TestCase):
+    def test_canSetSpeed(self):
+        mixin = HasSpeed()
+        self.assertTrue(mixin.canSetSpeed())
+
+    def test_speed_get(self):
+        mixin = HasSpeed(100.0)
+        self.assertEquals(mixin.speed, 100.0)
+
+    def test_speed_set(self):
+        mixin = HasSpeed(0.0)
+
+        with patch.object(mixin, 'canSetSpeed', return_value=True) as canSetSpeedMock:
+            mixin.speed = 100.0
+
+        canSetSpeedMock.assert_called_once()
+        self.assertEquals(mixin.speed, 100.0)
+
+    def test_speed_set_doSetSpeed(self):
+        mixin = HasSpeed(0.0)
+
+        with patch.object(mixin, 'canSetSpeed', return_value=True), patch.object(mixin, 'doSetSpeed',
+                                                                                 create=True) as doSetSpeedMock:
+            mixin.speed = 100.0
+
+        doSetSpeedMock.assert_called_once()
