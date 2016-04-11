@@ -1,4 +1,32 @@
 from abc import ABCMeta, abstractmethod
+from obsub import event
+
+
+class CanBeReady(object):
+    def __init__(self, initially_ready=False):
+        self._ready = initially_ready
+
+    @event
+    def ready_event(self):
+        pass
+
+    @event
+    def not_ready_event(self):
+        pass
+
+    @property
+    def ready(self):
+        return self._ready
+
+    def _setReady(self):
+        if not self.ready:
+            self._ready = True
+            self.ready_event()
+
+    def _setNotReady(self):
+        if self.ready:
+            self._ready = False
+            self.not_ready_event()
 
 
 class CanSwitchOn(object):

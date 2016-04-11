@@ -4,50 +4,33 @@ from obsub import event
 from threading import Timer
 from time import sleep
 
-from mixins import CanSwitchOn, CanSwitchOff, CanLevitate
+from mixins import CanBeReady, CanSwitchOn, CanSwitchOff, CanLevitate
 
 
-class Bearing(object):
-    def __init__(self):
-        self._ready = False
-
-    @event
-    def ready_event(self):
-        pass
-
-    @event
-    def not_ready_event(self):
-        pass
-
+class Bearing(CanBeReady, object):
     @event
     def error_event(self, message):
         pass
 
-    @property
-    def ready(self):
-        return self._ready
-
     def start(self):
-        if not self._ready:
+        if not self.ready:
             if hasattr(self, 'doStart'):
                 self.doStart()
             else:
                 self.doStartComplete()
 
     def stop(self):
-        if self._ready:
+        if self.ready:
             if hasattr(self, 'doStop'):
                 self.doStop()
             else:
                 self.doStopComplete()
 
     def doStartComplete(self):
-        self._ready = True
-        self.ready_event()
+        self._setReady()
 
     def doStopComplete(self):
-        self._ready = False
-        self.not_ready_event()
+        self._setNotReady()
 
 
 class MechanicalBearing(Bearing):

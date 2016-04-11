@@ -1,7 +1,74 @@
-from ..components import CanSwitchOn, CanSwitchOff
+from ..components import CanBeReady, CanSwitchOn, CanSwitchOff
 
 import unittest
 from mock import patch, Mock
+
+
+class TestCanBeReady(unittest.TestCase):
+    def test_default_initial_state(self):
+        mixin = CanBeReady()
+        self.assertFalse(mixin.ready)
+
+    def test_initial_state(self):
+        mixin = CanBeReady(False)
+        self.assertFalse(mixin.ready)
+
+        mixinReady = CanBeReady(True)
+        self.assertTrue(mixinReady.ready)
+
+    def test_set_ready_changes_state(self):
+        mixin = CanBeReady(False)
+        self.assertFalse(mixin.ready)
+
+        mixin._setReady()
+        self.assertTrue(mixin.ready)
+
+    def test_set_not_ready_changes_state(self):
+        mixin = CanBeReady(True)
+        self.assertTrue(mixin.ready)
+
+        mixin._setNotReady()
+        self.assertFalse(mixin.ready)
+
+    def test_set_ready_triggers_event_if_not_ready(self):
+        mixin = CanBeReady(False)
+
+        readyEventMock = Mock()
+        mixin.ready_event += readyEventMock
+
+        mixin._setReady()
+
+        readyEventMock.assert_called_once()
+
+    def test_set_ready_does_not_trigger_event_if_ready(self):
+        mixin = CanBeReady(True)
+
+        readyEventMock = Mock()
+        mixin.ready_event += readyEventMock
+
+        mixin._setReady()
+
+        readyEventMock.assert_not_called()
+
+    def test_set_not_ready_triggers_event_if_ready(self):
+        mixin = CanBeReady(True)
+
+        notReadyEventMock = Mock()
+        mixin.not_ready_event += notReadyEventMock
+
+        mixin._setNotReady()
+
+        notReadyEventMock.assert_called_once()
+
+    def test_set_not_ready_does_not_trigger_event_if_not_ready(self):
+        mixin = CanBeReady(False)
+
+        notReadyEventMock = Mock()
+        mixin.not_ready_event += notReadyEventMock
+
+        mixin._setNotReady()
+
+        notReadyEventMock.assert_not_called()
 
 
 @patch.multiple(CanSwitchOn, __abstractmethods__=set())
