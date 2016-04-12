@@ -160,7 +160,7 @@ def split_camel(camelCaseName):
 
 class ValueWithSetpointMixinMetaclass(ABCMeta):
     def __new__(cls, name, bases, attr):
-        if len(bases) == 1:
+        if len(bases) == 1 and bases[0] == object:
             reduced_name = split_camel(name)[-1]
             reduced_name_lower = reduced_name.lower()
 
@@ -175,21 +175,25 @@ class ValueWithSetpointMixinMetaclass(ABCMeta):
                 return getattr(self, '_' + reduced_name_lower)
 
             def setter(self, new_value):
+                setattr(self, '_{}_setpoint'.format(reduced_name_lower), new_value)
+
                 if getattr(self, 'canSet{}'.format(reduced_name))():
-                    setattr(self, '_{}_setpoint'.format(reduced_name_lower), new_value)
+                    getattr(self, 'goTo{}Setpoint'.format(reduced_name))()
 
-                    if hasattr(self, 'doSet{}'.format(reduced_name)):
-                        getattr(self, 'doSet{}'.format(reduced_name))()
-                    else:
-                        setattr(self, '_{}'.format(reduced_name_lower),
-                                getattr(self, '_{}_setpoint'.format(reduced_name_lower)))
-                        getattr(self, 'do{}SetpointReached'.format(reduced_name))()
+            def goToSetpoint(self, *args):
+                if hasattr(self, 'doSet{}'.format(reduced_name)):
+                    getattr(self, 'doSet{}'.format(reduced_name))()
+                else:
+                    setattr(self, '_{}'.format(reduced_name_lower),
+                            getattr(self, '_{}_setpoint'.format(reduced_name_lower)))
+                    getattr(self, 'do{}SetpointReached'.format(reduced_name))()
 
-            def do_nothing(self):
+            def do_nothing(self, *args):
                 pass
 
             attr['__init__'] = constructor
             attr[reduced_name_lower] = property(getter, setter)
+            attr['goTo{}Setpoint'.format(reduced_name)] = goToSetpoint
             attr['canSet{}'.format(reduced_name)] = abstractmethod(lambda self: True)
             attr['do{}SetpointReached'.format(reduced_name)] = abstractmethod(do_nothing)
 
