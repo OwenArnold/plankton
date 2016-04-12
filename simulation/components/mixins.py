@@ -4,6 +4,7 @@ from obsub import event
 
 class CanBeReady(object):
     def __init__(self, initially_ready=False):
+        super(CanBeReady, self).__init__()
         self._ready = initially_ready
 
     @event
@@ -38,6 +39,9 @@ class CanFail(object):
 class CanStartStop(object):
     __metaclass__ = ABCMeta
 
+    def __init__(self):
+        super(CanStartStop, self).__init__()
+
     @abstractmethod
     def canStart(self):
         return False
@@ -71,6 +75,9 @@ class CanStartStop(object):
 
 class CanSwitchOn(object):
     __metaclass__ = ABCMeta
+
+    def __init__(self):
+        super(CanSwitchOn, self).__init__()
 
     @abstractmethod
     def canSwitchOn(self):
@@ -110,6 +117,9 @@ class CanSwitchOff(object):
 class CanLevitate(object):
     __metaclass__ = ABCMeta
 
+    def __init__(self):
+        super(CanLevitate, self).__init__()
+
     @abstractmethod
     def canLevitate(self):
         return False
@@ -148,49 +158,38 @@ def split_camel(camelCaseName):
     return re.findall(r'[A-Z](?:[a-z]+|[A-Z]*(?=[A-Z]|$))', camelCaseName)
 
 
-def make_constructor(name):
-    def constructor(self, initial_value=0.0):
-        setattr(self, '_' + name, initial_value)
-        setattr(self, '_' + name + '_setpoint', initial_value)
-
-    return constructor
-
-
-def make_getter(name):
-    def getter(self):
-        return getattr(self, '_' + name)
-
-    return getter
-
-
-def make_setter(name):
-    name_title = name.title()
-
-    def setter(self, new_value):
-        if getattr(self, 'canSet{}'.format(name_title))():
-            setattr(self, '_{}_setpoint'.format(name), new_value)
-
-            if hasattr(self, 'doSet{}'.format(name_title)):
-                getattr(self, 'doSet{}'.format(name_title))()
-            else:
-                setattr(self, '_{}'.format(name), getattr(self, '_{}_setpoint'.format(name)))
-                getattr(self, 'do{}SetpointReached'.format(name_title))()
-
-    return setter
-
-
-def do_nothing(self):
-    pass
-
-
 class ValueWithSetpointMixinMetaclass(ABCMeta):
     def __new__(cls, name, bases, attr):
         if len(bases) == 1:
             reduced_name = split_camel(name)[-1]
             reduced_name_lower = reduced_name.lower()
 
-            attr['__init__'] = make_constructor(reduced_name_lower)
-            attr[reduced_name_lower] = property(make_getter(reduced_name_lower), make_setter(reduced_name_lower))
+            def constructor(self, initial_value=0.0):
+                # Found at http://stackoverflow.com/questions/12757468
+                MixinClass = next(c for c in type(self).__mro__ if c.__module__ == __name__ and c.__name__ == name)
+                super(MixinClass, self).__init__()
+                setattr(self, '_' + reduced_name_lower, initial_value)
+                setattr(self, '_' + reduced_name_lower + '_setpoint', initial_value)
+
+            def getter(self):
+                return getattr(self, '_' + reduced_name_lower)
+
+            def setter(self, new_value):
+                if getattr(self, 'canSet{}'.format(reduced_name))():
+                    setattr(self, '_{}_setpoint'.format(reduced_name_lower), new_value)
+
+                    if hasattr(self, 'doSet{}'.format(reduced_name)):
+                        getattr(self, 'doSet{}'.format(reduced_name))()
+                    else:
+                        setattr(self, '_{}'.format(reduced_name_lower),
+                                getattr(self, '_{}_setpoint'.format(reduced_name_lower)))
+                        getattr(self, 'do{}SetpointReached'.format(reduced_name))()
+
+            def do_nothing(self):
+                pass
+
+            attr['__init__'] = constructor
+            attr[reduced_name_lower] = property(getter, setter)
             attr['canSet{}'.format(reduced_name)] = abstractmethod(lambda self: True)
             attr['do{}SetpointReached'.format(reduced_name)] = abstractmethod(do_nothing)
 
