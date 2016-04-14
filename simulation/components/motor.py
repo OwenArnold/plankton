@@ -50,9 +50,7 @@ class Motor(CanBeReady, CanStartStop, CanFail, CanSwitchOn, CanSwitchOff, HasSpe
 
             'callbacks': {
                 'onchangestate': print_state,
-                'onspeed_setpoint_reached': self.goToPhaseSetpoint,
-                'onaccelerating': self.doSimulateSetSpeed,
-                'onphase_locking': self.doSimulateSetPhase,
+                'onphase_locking': self.goToPhaseSetpoint,
             }
         })
 
@@ -87,12 +85,14 @@ class Motor(CanBeReady, CanStartStop, CanFail, CanSwitchOn, CanSwitchOff, HasSpe
         return self._fsm.can('set_speed')
 
     def doSetSpeed(self):
-        self._fsm.set_speed()
+        if not self._fsm.isstate('accelerating'):
+            self._fsm.set_speed()
 
-    def doSimulateSetSpeed(self, *args):
-        self._speed = self._speed_setpoint
+        self.doSimulateSetSpeed()
         self.doSpeedSetpointReached()
-        return True
+
+    def doSimulateSetSpeed(self):
+        self._speed = self._speed_setpoint
 
     def doSpeedSetpointReached(self):
         self._fsm.speed_setpoint_reached()
@@ -101,12 +101,14 @@ class Motor(CanBeReady, CanStartStop, CanFail, CanSwitchOn, CanSwitchOff, HasSpe
         return self._fsm.can('set_phase')
 
     def doSetPhase(self):
-        self._fsm.set_phase()
+        if not self._fsm.isstate('phase_locking'):
+            self._fsm.set_phase()
 
-    def doSimulateSetPhase(self, *args):
-        self._phase = self._phase_setpoint
+        self.doSimulateSetPhase()
         self.doPhaseSetpointReached()
-        return True
+
+    def doSimulateSetPhase(self):
+        self._phase = self._phase_setpoint
 
     def doPhaseSetpointReached(self):
         self._fsm.phase_setpoint_reached()
@@ -114,6 +116,10 @@ class Motor(CanBeReady, CanStartStop, CanFail, CanSwitchOn, CanSwitchOff, HasSpe
     def setSpeedAndPhase(self, new_speed, new_phase):
         self.speed = new_speed
         self.phase = new_phase
+
+        print 'New Setpoints: ', self.speed, self.phase
+
+        self.goToSpeedSetpoint()
 
 
 def equal(a, b, tolerance=1.0):
@@ -138,30 +144,17 @@ class SlowMotor(Motor):
 
             sleep(0.1)
 
-        print 'T: ' + str(self._speed)
-        self.doSpeedSetpointReached()
-
-    def doSimulateSetSpeed(self, *args):
-        if self._thread is None:
-            self._thread = Thread(target=self.accelerate)
-            self._thread.start()
-
-        return False
-
-    def lock_phase(self):
-        self._phase = self._phase_setpoint
-        self.doPhaseSetpointReached()
+    def doSimulateSetSpeed(self):
+        self.accelerate()
 
     def doSimulateSetPhase(self, *args):
         diff = abs(self._phase_setpoint - self._phase)
-        timer = Timer(function=self.lock_phase, interval=diff / self._acceleration)
-        timer.start()
-
-        return False
+        sleep(diff / self._acceleration)
+        self._phase = self._phase_setpoint
 
 
 if __name__ == '__main__':
-    m = SlowMotor(5.0)
+    m = Motor()
 
     m.start()
     m.setSpeedAndPhase(60.0, 15.0)

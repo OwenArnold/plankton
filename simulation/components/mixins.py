@@ -177,23 +177,38 @@ class ValueWithSetpointMixinMetaclass(ABCMeta):
             def setter(self, new_value):
                 setattr(self, '_{}_setpoint'.format(reduced_name_lower), new_value)
 
-                if getattr(self, 'canSet{}'.format(reduced_name))():
+            def setAndExecute(self, new_value, execute=True):
+                print 'Setting {} to new value {}'.format(reduced_name_lower, new_value)
+                setattr(self, reduced_name_lower, new_value)
+
+                if execute:
                     getattr(self, 'goTo{}Setpoint'.format(reduced_name))()
 
+            def getSetpoint(self):
+                return getattr(self, '_{}_setpoint'.format(reduced_name_lower))
+
+            def isAtSetpoint(self):
+                return getattr(self, '_{}'.format(reduced_name_lower)) == getattr(self,
+                                                                                  '_{}'.format(reduced_name_lower))
+
             def goToSetpoint(self, *args):
-                if hasattr(self, 'doSet{}'.format(reduced_name)):
-                    getattr(self, 'doSet{}'.format(reduced_name))()
-                else:
-                    setattr(self, '_{}'.format(reduced_name_lower),
-                            getattr(self, '_{}_setpoint'.format(reduced_name_lower)))
-                    getattr(self, 'do{}SetpointReached'.format(reduced_name))()
+                if getattr(self, 'canSet{}'.format(reduced_name))():
+                    if hasattr(self, 'doSet{}'.format(reduced_name)):
+                        getattr(self, 'doSet{}'.format(reduced_name))()
+                    else:
+                        setattr(self, '_{}'.format(reduced_name_lower),
+                                getattr(self, '_{}_setpoint'.format(reduced_name_lower)))
+                        getattr(self, 'do{}SetpointReached'.format(reduced_name))()
 
             def do_nothing(self, *args):
                 pass
 
             attr['__init__'] = constructor
             attr[reduced_name_lower] = property(getter, setter)
+            attr['set{}'.format(reduced_name)] = setAndExecute
+            attr['isAt{}Setpoint'.format(reduced_name)] = isAtSetpoint
             attr['goTo{}Setpoint'.format(reduced_name)] = goToSetpoint
+
             attr['canSet{}'.format(reduced_name)] = abstractmethod(lambda self: True)
             attr['do{}SetpointReached'.format(reduced_name)] = abstractmethod(do_nothing)
 

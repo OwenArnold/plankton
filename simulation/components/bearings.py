@@ -6,6 +6,10 @@ from time import sleep
 from mixins import CanBeReady, CanFail, CanStartStop, CanSwitchOn, CanSwitchOff, CanLevitate
 
 
+def print_state(ev):
+    print ev.src + ' ----> ' + ev.dst
+
+
 class Bearing(CanBeReady, CanStartStop, CanFail, object):
     def canStart(self):
         return not self.ready
@@ -48,7 +52,7 @@ class MagneticBearing(CanSwitchOn, CanSwitchOff, CanLevitate, Bearing):
             ],
 
             'callbacks': {
-                'onlevitating': self._simulateLevitation,
+                'onchangestate': print_state,
                 'onlevitated': self.doLevitateComplete,
                 'onleavelevitated': self.doDelevitateComplete,
                 'onerror': self._handle_error,
@@ -83,6 +87,7 @@ class MagneticBearing(CanSwitchOn, CanSwitchOff, CanLevitate, Bearing):
 
     def doLevitate(self):
         self._fsm.levitate()
+        self._simulateLevitation()
 
     def doLevitateComplete(self, *args):
         self.doStartComplete()
@@ -96,7 +101,7 @@ class MagneticBearing(CanSwitchOn, CanSwitchOff, CanLevitate, Bearing):
     def doDelevitateComplete(self, ev):
         self.doStopComplete()
 
-    def _simulateLevitation(self, ev):
+    def _simulateLevitation(self):
         if hasattr(self, 'doSimulateLevitation'):
             self.doSimulateLevitation()
         else:
@@ -113,19 +118,14 @@ class TimedMagneticBearing(MagneticBearing):
     def __init__(self, levitation_time):
         super(TimedMagneticBearing, self).__init__()
 
-        self._timer = Timer(interval=levitation_time,
-                            function=self.simulateLevitationSuccess)
-
-    def doSimulateLevitation(self):
-        self._timer.start()
-
-
-class BlockingTimedMagneticBearing(MagneticBearing):
-    def __init__(self, levitation_time):
-        super(BlockingTimedMagneticBearing, self).__init__()
-
         self._levitation_time = levitation_time
 
     def doSimulateLevitation(self):
         sleep(self._levitation_time)
         self.simulateLevitationSuccess()
+
+
+if __name__ == '__main__':
+    b = TimedMagneticBearing(2.0)
+    b.start()
+    b.stop()
