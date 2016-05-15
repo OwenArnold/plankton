@@ -29,7 +29,7 @@ class TestStateMachine(unittest.TestCase):
         with self.assertRaises(StateMachineException) as context:
             StateMachine({})
 
-        self.assertTrue("must include 'initial'" in str(context.exception))
+        self.assertTrue("must include 'initial'" not in str(context.exception))
 
     def test_state_machine_starts_in_None(self):
         sm = StateMachine({'initial': 'foobar'})
