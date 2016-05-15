@@ -2,7 +2,7 @@
 
 Plankton is a library that assists in building simulated hardware devices. Currently this repository contains
 a simulated neutron chopper as it will be present at [ESS](http://europeanspallationsource.se).
-Choppers at ESS are abstracted in such a way that all of them are exposed via the same interface,
+Choppers at [ESS](http://europeanspallationsource.se) are abstracted in such a way that all of them are exposed via the same interface,
 regardless of manufacturer. The behavior of this abstraction layer can be modelled as a finite state machine.
 
 The docs-directory contains an `fsm`-file (created using the program [qfsm](http://qfsm.sourceforge.net/)) which describes
