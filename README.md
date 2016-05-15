@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/OwenArnold/plankton.svg?branch=master)](https://travis-ci.org/OwenArnold/plankton)
+
 # Plankton
 
 Plankton is a library that assists in building simulated hardware devices. Currently this repository contains
